@@ -1,0 +1,157 @@
+from graphviz import Digraph
+
+# Tạo một đồ thị có hướng
+dot = Digraph(comment='MultimodalModel Structure')
+
+# Đầu vào
+dot.node('Text Input', 'Text Input (annotation)')
+dot.node('OCR Input', 'OCR Input (ocr)')
+dot.node('Image Input', 'Image Input (image)')
+
+# Mô hình xử lý
+dot.node('Text Model', 'Text Model\n(VisoBERT)')
+dot.node('Image Model', 'Image Model\n(DeiT)')
+
+# Đặc trưng từ mô hình
+dot.node('Text Features', 'Text Features\n(last_hidden_state)')
+dot.node('Text Pooler', 'Text Pooler Output')
+dot.node('OCR Features', 'OCR Features\n(last_hidden_state)')
+dot.node('OCR Pooler', 'OCR Pooler Output')
+dot.node('Image Features', 'Image Features\n(last_hidden_state)')
+dot.node('Image Pooler', 'Image Pooler Output')
+
+# Xử lý đặc trưng (Linear Layers)
+dot.node('Text Linear', 'Text Linear')
+dot.node('OCR Linear', 'OCR Linear')
+dot.node('Image Linear', 'Image Linear')
+
+# Dự phóng đặc trưng (Projections)
+dot.node('Text Projection', 'Text Projection')
+dot.node('OCR Projection', 'OCR Projection')
+dot.node('Visual Projection', 'Visual Projection')
+
+# Kết hợp đặc trưng ban đầu
+dot.node('Fuse1', 'Fuse1\n(Image + OCR)')
+dot.node('Fuse2', 'Fuse2\n(Image + Text)')
+dot.node('Fuse3', 'Fuse3\n(Text + OCR)')
+
+# Transformer Encoders
+dot.node('Transformer I2C', 'Transformer I2C')
+dot.node('Transformer I2A', 'Transformer I2A')
+dot.node('Transformer A2C', 'Transformer A2C')
+
+# Đặc trưng mới từ Transformer
+dot.node('New Text Features', 'New Text Features')
+dot.node('New OCR Features', 'New OCR Features')
+dot.node('New Image Features', 'New Image Features')
+
+# Attention Mechanism
+dot.node('Attention Weights', 'Attention Weights')
+
+# Kết hợp đặc trưng với trọng số
+dot.node('Fuse Feature 1', 'Fuse Feature 1\n(OCR + Image)')
+dot.node('Fuse Feature 2', 'Fuse Feature 2\n(Image + Text)')
+dot.node('Fuse Feature 3', 'Fuse Feature 3\n(Text + OCR)')
+
+# Xử lý thêm (Fusion Linear Layers)
+dot.node('Fusion1 Linear', 'Fusion1 Linear')
+dot.node('Fusion2 Linear', 'Fusion2 Linear')
+dot.node('Fusion3 Linear', 'Fusion3 Linear')
+
+# Kết hợp cuối cùng
+dot.node('Fuse Concat 1', 'Fuse Concat 1\n(Fuse1 + Image + OCR)')
+dot.node('Fuse Concat 2', 'Fuse Concat 2\n(Fuse2 + Image + Text)')
+dot.node('Fuse Concat 3', 'Fuse Concat 3\n(Fuse3 + Text + OCR)')
+
+# Classifiers
+dot.node('Classifier Text', 'Classifier Text')
+dot.node('Classifier Fusion 1', 'Classifier Fusion 1')
+dot.node('Classifier Fusion 2', 'Classifier Fusion 2')
+dot.node('Classifier Fusion 3', 'Classifier Fusion 3')
+
+# Đầu ra
+dot.node('Output', 'Output\n(scores, loss)')
+
+# Kết nối các node theo luồng dữ liệu
+# 1. Đầu vào đến mô hình xử lý
+dot.edge('Text Input', 'Text Model')
+dot.edge('OCR Input', 'Text Model')
+dot.edge('Image Input', 'Image Model')
+
+# 2. Mô hình xử lý đến đặc trưng
+dot.edge('Text Model', 'Text Features')
+dot.edge('Text Model', 'Text Pooler')
+dot.edge('Text Model', 'OCR Features')
+dot.edge('Text Model', 'OCR Pooler')
+dot.edge('Image Model', 'Image Features')
+dot.edge('Image Model', 'Image Pooler')
+
+# 3. Đặc trưng đến xử lý đặc trưng
+dot.edge('Text Pooler', 'Text Linear')
+dot.edge('OCR Pooler', 'OCR Linear')
+dot.edge('Image Pooler', 'Image Linear')
+dot.edge('Text Features', 'Text Projection')
+dot.edge('OCR Features', 'OCR Projection')
+dot.edge('Image Features', 'Visual Projection')
+
+# 4. Xử lý đặc trưng đến kết hợp đặc trưng
+dot.edge('Visual Projection', 'Fuse1')
+dot.edge('OCR Projection', 'Fuse1')
+dot.edge('Visual Projection', 'Fuse2')
+dot.edge('Text Projection', 'Fuse2')
+dot.edge('Text Projection', 'Fuse3')
+dot.edge('OCR Projection', 'Fuse3')
+
+# 5. Kết hợp đặc trưng đến Transformer Encoders
+dot.edge('Fuse1', 'Transformer I2C')
+dot.edge('Fuse2', 'Transformer I2A')
+dot.edge('Fuse3', 'Transformer A2C')
+
+# 6. Transformer Encoders đến đặc trưng mới
+dot.edge('Transformer I2A', 'New Text Features')
+dot.edge('Transformer A2C', 'New Text Features')
+dot.edge('Transformer I2C', 'New OCR Features')
+dot.edge('Transformer A2C', 'New OCR Features')
+dot.edge('Transformer I2C', 'New Image Features')
+dot.edge('Transformer I2A', 'New Image Features')
+
+# 7. Đặc trưng mới đến Attention Weights
+dot.edge('New Text Features', 'Attention Weights')
+dot.edge('New OCR Features', 'Attention Weights')
+dot.edge('New Image Features', 'Attention Weights')
+
+# 8. Attention Weights đến kết hợp đặc trưng với trọng số
+dot.edge('Attention Weights', 'Fuse Feature 1')
+dot.edge('Attention Weights', 'Fuse Feature 2')
+dot.edge('Attention Weights', 'Fuse Feature 3')
+
+# 9. Kết hợp đặc trưng với trọng số đến xử lý thêm
+dot.edge('Fuse Feature 1', 'Fusion1 Linear')
+dot.edge('Fuse Feature 2', 'Fusion2 Linear')
+dot.edge('Fuse Feature 3', 'Fusion3 Linear')
+
+# 10. Xử lý thêm đến kết hợp cuối cùng
+dot.edge('Fusion1 Linear', 'Fuse Concat 1')
+dot.edge('Fusion2 Linear', 'Fuse Concat 2')
+dot.edge('Fusion3 Linear', 'Fuse Concat 3')
+dot.edge('Image Pooler', 'Fuse Concat 1')
+dot.edge('OCR Pooler', 'Fuse Concat 1')
+dot.edge('Image Pooler', 'Fuse Concat 2')
+dot.edge('Text Pooler', 'Fuse Concat 2')
+dot.edge('Text Pooler', 'Fuse Concat 3')
+dot.edge('OCR Pooler', 'Fuse Concat 3')
+
+# 11. Kết hợp cuối cùng đến Classifiers
+dot.edge('Text Pooler', 'Classifier Text')
+dot.edge('Fuse Concat 1', 'Classifier Fusion 1')
+dot.edge('Fuse Concat 2', 'Classifier Fusion 2')
+dot.edge('Fuse Concat 3', 'Classifier Fusion 3')
+
+# 12. Classifiers đến Output
+dot.edge('Classifier Text', 'Output')
+dot.edge('Classifier Fusion 1', 'Output')
+dot.edge('Classifier Fusion 2', 'Output')
+dot.edge('Classifier Fusion 3', 'Output')
+
+# Lưu đồ thị thành file PNG
+dot.render('multimodal_model_structure', format='png', view=True)

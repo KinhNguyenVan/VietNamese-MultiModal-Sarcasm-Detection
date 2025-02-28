@@ -1,0 +1,115 @@
+// MultimodalModel Structure
+digraph {
+	"Text Input" [label="Text Input (annotation)"]
+	"OCR Input" [label="OCR Input (ocr)"]
+	"Image Input" [label="Image Input (image)"]
+	"Text Model" [label="Text Model
+(VisoBERT)"]
+	"Image Model" [label="Image Model
+(DeiT)"]
+	"Text Features" [label="Text Features
+(last_hidden_state)"]
+	"Text Pooler" [label="Text Pooler Output"]
+	"OCR Features" [label="OCR Features
+(last_hidden_state)"]
+	"OCR Pooler" [label="OCR Pooler Output"]
+	"Image Features" [label="Image Features
+(last_hidden_state)"]
+	"Image Pooler" [label="Image Pooler Output"]
+	"Text Linear" [label="Text Linear"]
+	"OCR Linear" [label="OCR Linear"]
+	"Image Linear" [label="Image Linear"]
+	"Text Projection" [label="Text Projection"]
+	"OCR Projection" [label="OCR Projection"]
+	"Visual Projection" [label="Visual Projection"]
+	Fuse1 [label="Fuse1
+(Image + OCR)"]
+	Fuse2 [label="Fuse2
+(Image + Text)"]
+	Fuse3 [label="Fuse3
+(Text + OCR)"]
+	"Transformer I2C" [label="Transformer I2C"]
+	"Transformer I2A" [label="Transformer I2A"]
+	"Transformer A2C" [label="Transformer A2C"]
+	"New Text Features" [label="New Text Features"]
+	"New OCR Features" [label="New OCR Features"]
+	"New Image Features" [label="New Image Features"]
+	"Attention Weights" [label="Attention Weights"]
+	"Fuse Feature 1" [label="Fuse Feature 1
+(OCR + Image)"]
+	"Fuse Feature 2" [label="Fuse Feature 2
+(Image + Text)"]
+	"Fuse Feature 3" [label="Fuse Feature 3
+(Text + OCR)"]
+	"Fusion1 Linear" [label="Fusion1 Linear"]
+	"Fusion2 Linear" [label="Fusion2 Linear"]
+	"Fusion3 Linear" [label="Fusion3 Linear"]
+	"Fuse Concat 1" [label="Fuse Concat 1
+(Fuse1 + Image + OCR)"]
+	"Fuse Concat 2" [label="Fuse Concat 2
+(Fuse2 + Image + Text)"]
+	"Fuse Concat 3" [label="Fuse Concat 3
+(Fuse3 + Text + OCR)"]
+	"Classifier Text" [label="Classifier Text"]
+	"Classifier Fusion 1" [label="Classifier Fusion 1"]
+	"Classifier Fusion 2" [label="Classifier Fusion 2"]
+	"Classifier Fusion 3" [label="Classifier Fusion 3"]
+	Output [label="Output
+(scores, loss)"]
+	"Text Input" -> "Text Model"
+	"OCR Input" -> "Text Model"
+	"Image Input" -> "Image Model"
+	"Text Model" -> "Text Features"
+	"Text Model" -> "Text Pooler"
+	"Text Model" -> "OCR Features"
+	"Text Model" -> "OCR Pooler"
+	"Image Model" -> "Image Features"
+	"Image Model" -> "Image Pooler"
+	"Text Pooler" -> "Text Linear"
+	"OCR Pooler" -> "OCR Linear"
+	"Image Pooler" -> "Image Linear"
+	"Text Features" -> "Text Projection"
+	"OCR Features" -> "OCR Projection"
+	"Image Features" -> "Visual Projection"
+	"Visual Projection" -> Fuse1
+	"OCR Projection" -> Fuse1
+	"Visual Projection" -> Fuse2
+	"Text Projection" -> Fuse2
+	"Text Projection" -> Fuse3
+	"OCR Projection" -> Fuse3
+	Fuse1 -> "Transformer I2C"
+	Fuse2 -> "Transformer I2A"
+	Fuse3 -> "Transformer A2C"
+	"Transformer I2A" -> "New Text Features"
+	"Transformer A2C" -> "New Text Features"
+	"Transformer I2C" -> "New OCR Features"
+	"Transformer A2C" -> "New OCR Features"
+	"Transformer I2C" -> "New Image Features"
+	"Transformer I2A" -> "New Image Features"
+	"New Text Features" -> "Attention Weights"
+	"New OCR Features" -> "Attention Weights"
+	"New Image Features" -> "Attention Weights"
+	"Attention Weights" -> "Fuse Feature 1"
+	"Attention Weights" -> "Fuse Feature 2"
+	"Attention Weights" -> "Fuse Feature 3"
+	"Fuse Feature 1" -> "Fusion1 Linear"
+	"Fuse Feature 2" -> "Fusion2 Linear"
+	"Fuse Feature 3" -> "Fusion3 Linear"
+	"Fusion1 Linear" -> "Fuse Concat 1"
+	"Fusion2 Linear" -> "Fuse Concat 2"
+	"Fusion3 Linear" -> "Fuse Concat 3"
+	"Image Pooler" -> "Fuse Concat 1"
+	"OCR Pooler" -> "Fuse Concat 1"
+	"Image Pooler" -> "Fuse Concat 2"
+	"Text Pooler" -> "Fuse Concat 2"
+	"Text Pooler" -> "Fuse Concat 3"
+	"OCR Pooler" -> "Fuse Concat 3"
+	"Text Pooler" -> "Classifier Text"
+	"Fuse Concat 1" -> "Classifier Fusion 1"
+	"Fuse Concat 2" -> "Classifier Fusion 2"
+	"Fuse Concat 3" -> "Classifier Fusion 3"
+	"Classifier Text" -> Output
+	"Classifier Fusion 1" -> Output
+	"Classifier Fusion 2" -> Output
+	"Classifier Fusion 3" -> Output
+}
