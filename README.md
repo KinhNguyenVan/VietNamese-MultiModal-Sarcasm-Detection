@@ -7,9 +7,9 @@ This project showcases a deep learning model designed to detect sarcasm in Vietn
 
 Key Features
 Utilizes ViSoBERT, a large language model for Vietnamese, to encode textual features.
-Employs DeiT, a vision transformer, for image feature extraction.
+Employs DinoV2, a vision transformer, for image feature extraction.
 Leverages cross-attention mechanisms to effectively combine features from captions, images, and OCR text.
-Tackles the challenge of highly imbalanced training data, achieving an F1-score of 40.34%, compared to the top competition score of 46.58%.
+Tackles the challenge of highly imbalanced training data, achieving an F1-score of 41.00%, compared to the top competition score of 46.58%.
 Below is the architecture of the model:
 
 
