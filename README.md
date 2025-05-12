@@ -1,7 +1,4 @@
 # VietNamese-Multimodal-Detection
-
-![image](https://raw.githubusercontent.com/KinhNguyenVan/VietNamese-MultiModal-Sarcasm-Detection/refs/heads/main/image/edited_pipeline.png)
-
 ## Description
 This project showcases a deep learning model designed to detect sarcasm in Vietnamese through a multimodal approach. Developed for an AI competition, the model processes input data consisting of images and their accompanying captions to classify four distinct labels: Text-sarcasm, Image-sarcasm, Not-sarcasm, and Multi-sarcasm.
 
