@@ -9,6 +9,7 @@ import copy
 import torch.nn.functional as F
 
 from torch.autograd import Variable
+from peft import LoraConfig, get_peft_model
 
 class MultimodalEncoder(nn.Module):
 
@@ -174,36 +175,41 @@ class MultimodalModel(nn.Module):
 
     self.text_model=AutoModel.from_pretrained("uitnlp/visobert",attn_implementation="eager")
 
-    self.image_model=DeiTModel(DeiTConfig())
+    self.image_model=AutoModel.from_pretrained("facebook/dinov2-base")
+    if args.lora is not True:
+        for param in self.text_model.parameters():
+            param.requires_grad=False
+        for param in self.image_model.parameters():
+            param.requires_grad=False
+        for param in [self.text_model.pooler.dense.weight,
+                      self.text_model.pooler.dense.bias]:
+            param.requires_grad = True
+        for param in [self.image_model.pooler.dense.weight,
+                      self.image_model.pooler.dense.bias]:
+            param.requires_grad = True
+    else:
+        lora_config_text = LoraConfig(
+                r=args.lora_r,
+                lora_alpha=args.lora_alpha,
+                lora_dropout=0.1,
+                target_modules=["query", "value", "key","dense"],
+                bias="none"
+            )
+        lora_config_image = LoraConfig(
+                r=args.lora_r,
+                lora_alpha=args.lora_alpha,
+                lora_dropout=0.1,
+                target_modules=["query", "value", "key","dense"],
+                bias="none"
+            )
+        self.text_model = get_peft_model(self.text_model, lora_config_text)
+        self.image_model = get_peft_model(self.image_model,lora_config_image)
 
     self.transformer_I2A=MultimodalEncoder(self.text_model,args.layers1)
 
     self.transformer_I2C=MultimodalEncoder(self.text_model,args.layers2)
 
     self.transformer_A2C=MultimodalEncoder(self.text_model,args.layers3)
-
-    if args.is_train is not True:
-
-        for param in self.text_model.parameters():
-
-            param.requires_grad=False
-
-        for param in self.image_model.parameters():
-
-            param.requires_grad=False
-
-    for param in [self.text_model.pooler.dense.weight,
-
-                  self.text_model.pooler.dense.bias]:
-
-        param.requires_grad = True
-
-    for param in [self.image_model.pooler.dense.weight,
-
-                  self.image_model.pooler.dense.bias]:
-
-        param.requires_grad = True
-
    
 
     self.text_linear=nn.Sequential(
@@ -316,7 +322,7 @@ class MultimodalModel(nn.Module):
 
     self.att=nn.Linear(args.text_size,1,bias=False)
 
-    self.loss=FocalLoss(gamma=2,alpha=[0.4, 0.4,0.1,0.1])
+    self.loss=FocalLoss(gamma=2,alpha=[0.3, 0.3,0.2,0.2])
     # self.loss = nn.CrossEntropyLoss()
 
   def forward(self,inputs: dict[str,torch.tensor] ,labels=None):
@@ -371,9 +377,9 @@ class MultimodalModel(nn.Module):
 
 
 
-    attention_mask_1=torch.cat((torch.ones(ocr_features.shape[0],198).to(text_features.device),inputs['ocr']['attention_mask']),dim=-1)
+    attention_mask_1=torch.cat((torch.ones(ocr_features.shape[0],257).to(text_features.device),inputs['ocr']['attention_mask']),dim=-1)
 
-    attention_mask_2=torch.cat((torch.ones(text_features.shape[0],198).to(text_features.device),inputs['annotation']['attention_mask']),dim=-1)
+    attention_mask_2=torch.cat((torch.ones(text_features.shape[0],257).to(text_features.device),inputs['annotation']['attention_mask']),dim=-1)
 
     attention_mask_3=torch.cat((inputs['annotation']['attention_mask'],inputs['ocr']['attention_mask']),dim=-1)
 
@@ -411,13 +417,13 @@ class MultimodalModel(nn.Module):
 
 
 
-    new_text_features_1=fuse_hiddens_2[:,198:,:]
+    new_text_features_1=fuse_hiddens_2[:,257:,:]
 
     new_text_features_2=fuse_hiddens_3[:,:text_features.shape[1],:]
 
       
 
-    new_ocr_features_1=fuse_hiddens_1[:,198:,:]
+    new_ocr_features_1=fuse_hiddens_1[:,257:,:]
 
     new_ocr_features_2=fuse_hiddens_3[:,text_features.shape[1]:,:]
 
@@ -502,14 +508,6 @@ class MultimodalModel(nn.Module):
     fuse_feature_2=self.fusion2_linear(fuse_feature_2)
 
     fuse_feature_3=self.fusion2_linear(fuse_feature_3)
-
-    
-
-    # fuse_concat_1=torch.cat((fuse_feature_1,image_feature,ocr_feature),dim=1)
-
-    # fuse_concat_2=torch.cat((fuse_feature_2,image_feature,text_feature),dim=1)
-
-    # fuse_concat_3=torch.cat((fuse_feature_3,text_feature,ocr_feature),dim=1)
 
 
     fuse_concat_1 = fuse_feature_1 + image_feature + ocr_feature

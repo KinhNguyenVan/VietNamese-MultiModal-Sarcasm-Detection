@@ -14,17 +14,22 @@ from sklearn.metrics import f1_score,precision_score,recall_score,classification
 import numpy as np
 from torch.utils.data import DataLoader
 import os
+from torch.optim.lr_scheduler import CosineAnnealingLR
 
 # train
 
 def train(args,train_data,model,processor,device,checkpoint=None,sampler=None,shuffle=False):
     dataTrainLoader=DataLoader(train_data,batch_size=args.train_batch_size,shuffle=shuffle,sampler=sampler)
-
+    
     if checkpoint is None:
 
         start_epoch=0
+
         model.to(device)
+
         model.train()
+
+
 
         if args.optimizer_name == 'adam':
 
@@ -69,6 +74,9 @@ def train(args,train_data,model,processor,device,checkpoint=None,sampler=None,sh
             print("Used SGD optimizer")
 
     try:
+        T_max = args.num_train_epochs * len(dataTrainLoader)
+        scheduler = CosineAnnealingLR(optimizer, T_max=T_max)
+        accumulation_steps = args.accumulation_steps
 
         for i_epoch in range(start_epoch,start_epoch+args.num_train_epochs):
             
@@ -93,18 +101,20 @@ def train(args,train_data,model,processor,device,checkpoint=None,sampler=None,sh
 
 
                 loss,score=model(inputs,label)
+                loss = loss / accumulation_steps
 
 
-
-                optimizer.zero_grad()
+                
 
                 loss.backward()
+                if (step + 1) % accumulation_steps == 0 or (step + 1) == len(dataTrainLoader):
+                    optimizer.step()
+                    scheduler.step()
+                    optimizer.zero_grad()
 
-                optimizer.step()
 
 
-
-                sum_loss+=loss.item()
+                sum_loss+=loss.item()*accumulation_steps
 
                 sum_step+=1
 
